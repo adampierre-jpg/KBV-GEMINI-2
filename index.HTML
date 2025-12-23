@@ -1,149 +1,632 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kettlebell Velocity Tracker</title>
-    <!-- Tailwind for rapid layout utilities -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MediaPipe dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/vision-bundle.js" crossorigin="anonymous"></script>
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VBT Training Tool</title>
+  <style>
+    /* ============================================================
+       BASE STYLES
+       ============================================================ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a; 
+      color: #e2e8f0; 
+      min-height: 100vh;
+    }
+
+```
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h1 { color: #fff; font-size: 24px; }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   VIDEO SECTION
+   ============================================================ */
+.video-section {
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.video-container {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+
+#video, #canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+#video { opacity: 0; }
+
+.controls {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  flex-wrap: wrap;
+}
+
+button, .file-label {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+button:hover, .file-label:hover { background: #2563eb; }
+button:disabled { background: #475569; cursor: not-allowed; }
+
+#file-input { display: none; }
+
+/* ============================================================
+   SIDEBAR & CARDS
+   ============================================================ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 14px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+}
+
+/* ============================================================
+   CALIBRATION SECTION
+   ============================================================ */
+.calibration-section {
+  border: 2px solid #3b82f6;
+}
+
+.height-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+#height-input {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+#height-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+#btn-calibrate {
+  background: #22c55e;
+}
+
+#btn-calibrate:hover {
+  background: #16a34a;
+}
+
+#calibration-status {
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   TIMER CARD - Work/Rest Timer Display
+   ============================================================ */
+.timer-card { 
+  border: 2px solid #3b82f6; 
+}
+
+.timer-display { 
+  text-align: center; 
+  padding: 15px 0; 
+}
+
+.timer-label { 
+  font-size: 14px; 
+  color: #64748b; 
+  text-transform: uppercase; 
+  letter-spacing: 2px; 
+  margin-bottom: 5px; 
+}
+
+.rest-timer { 
+  font-size: 72px; 
+  font-weight: bold; 
+  font-family: 'Courier New', monospace; 
+  color: #64748b; 
+}
+
+.rest-timer.resting { 
+  color: #22c55e; 
+  animation: pulse-green 1.5s infinite; 
+}
+
+.rest-timer.working { 
+  color: #f59e0b; 
+}
+
+@keyframes pulse-green { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0.6; } 
+}
+
+.timer-stats { 
+  display: flex; 
+  justify-content: space-around; 
+  border-top: 1px solid #334155; 
+  padding-top: 15px; 
+}
+
+.timer-stat { 
+  text-align: center; 
+}
+
+.timer-stat-label { 
+  display: block; 
+  font-size: 11px; 
+  color: #64748b; 
+  margin-bottom: 4px; 
+}
+
+.timer-stat-value { 
+  font-size: 24px; 
+  font-weight: bold; 
+  color: #fff; 
+}
+
+/* ============================================================
+   SESSION STATS CARD - Averages & Totals
+   ============================================================ */
+.session-card { 
+  border: 2px solid #8b5cf6; 
+}
+
+.session-stats { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 12px; 
+}
+
+.session-stat { 
+  text-align: center; 
+  background: #0f172a; 
+  padding: 12px; 
+  border-radius: 8px; 
+}
+
+.session-label { 
+  display: block; 
+  font-size: 11px; 
+  color: #64748b; 
+  margin-bottom: 4px; 
+}
+
+.session-value { 
+  font-size: 20px; 
+  font-weight: bold; 
+  color: #fff; 
+}
+
+/* ============================================================
+   FATIGUE MONITOR CARD - Velocity Drop-off Tracking
+   ============================================================ */
+.fatigue-card { 
+  border: 2px solid #f59e0b; 
+}
+
+.fatigue-zone-container { 
+  text-align: center; 
+  margin-bottom: 15px; 
+}
+
+.fatigue-zone { 
+  display: inline-block; 
+  padding: 12px 30px; 
+  border-radius: 8px; 
+  font-size: 20px; 
+  font-weight: bold; 
+  transition: all 0.3s ease;
+}
+
+/* Fatigue Zone Color States */
+.fatigue-zone.fresh { 
+  background: #22c55e; 
+  color: #fff; 
+}
+
+.fatigue-zone.mild { 
+  background: #84cc16; 
+  color: #000; 
+}
+
+.fatigue-zone.moderate { 
+  background: #f59e0b; 
+  color: #000; 
+}
+
+.fatigue-zone.high { 
+  background: #ef4444; 
+  color: #fff; 
+}
+
+.fatigue-zone.critical { 
+  background: #7f1d1d; 
+  color: #fff; 
+  animation: pulse-critical 0.5s infinite; 
+}
+
+@keyframes pulse-critical { 
+  0%, 100% { opacity: 1; transform: scale(1); } 
+  50% { opacity: 0.8; transform: scale(1.02); } 
+}
+
+.fatigue-stats { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 10px; 
+}
+
+.fatigue-stat { 
+  background: #0f172a; 
+  padding: 10px; 
+  border-radius: 8px; 
+  text-align: center; 
+}
+
+.fatigue-label { 
+  display: block; 
+  font-size: 11px; 
+  color: #64748b; 
+  margin-bottom: 4px; 
+}
+
+.fatigue-value { 
+  font-size: 16px; 
+  font-weight: bold; 
+  color: #fff; 
+}
+
+/* ============================================================
+   LIVE STATS
+   ============================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.stat-value.velocity {
+  color: #22c55e;
+}
+
+/* ============================================================
+   MOVEMENT DETECTION
+   ============================================================ */
+#detected-movement {
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+  color: #3b82f6;
+}
+
+/* ============================================================
+   MOVEMENT HISTORY LIST
+   ============================================================ */
+.movement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.movement-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #0f172a;
+  border-radius: 8px;
+}
+
+.movement-name {
+  font-weight: 600;
+}
+
+.movement-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.movement-stats span {
+  color: #fff;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+```
+
+  </style>
 </head>
-<body class="p-4 md:p-6 max-w-4xl mx-auto">
-
-    <!-- Message Box for Alerts/Errors (Replaces alert() and confirm()) -->
-    <div id="appMessageBox" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-lg shadow-xl text-sm transition-opacity duration-300 opacity-0"></div>
-
-    <!-- Header -->
-    <header class="mb-6 flex justify-between items-center flex-wrap gap-4">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">KB Velocity Tracker</h1>
-            <p class="text-slate-400 text-sm">Anaerobic Threshold Detector</p>
-        </div>
-        <div id="connectionStatus" class="flex items-center text-xs font-mono bg-slate-800 px-3 py-1 rounded-full text-yellow-500">
-            <span class="status-dot bg-yellow-500 animate-pulse"></span>
-            Initializing AI...
-        </div>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏋️ Velocity Based Training</h1>
     </header>
 
-    <!-- Main Control Panel -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        
-        <!-- Video Section -->
-        <div class="md:col-span-2 space-y-4">
-            <div class="video-container ring-1 ring-slate-700">
-                <video id="webcam" playsinline></video>
-                <canvas id="output_canvas"></canvas>
-            </div>
-            
-            <!-- Controls -->
-            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
-                <button id="startBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Enable Camera
-                </button>
-                <div class="relative overflow-hidden inline-block">
-                    <button class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded transition">
-                        Upload Video
-                    </button>
-                    <input type="file" id="videoUpload" accept="video/*" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
-                </div>
-                 <button id="resetBtn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded transition">
-                    Reset Test
-                </button>
-            </div>
-            <div class="flex gap-2 justify-center md:justify-start text-xs text-slate-400">
-                <label><input type="radio" name="exercise" value="snatch" checked> Snatch</label>
-                <label><input type="radio" name="exercise" value="swing"> Swing</label>
-                <label><input type="radio" name="exercise" value="clean"> Clean</label>
-            </div>
+```
+<div class="main-grid">
+  <!-- ============================================================
+       VIDEO SECTION
+       ============================================================ -->
+  <div class="video-section">
+    <div class="video-container">
+      <video id="video" playsinline muted></video>
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="controls">
+      <button id="btn-camera">📹 Camera</button>
+      <label class="file-label">
+        📁 Upload Video
+        <input type="file" id="file-input" accept="video/*">
+      </label>
+      <button id="btn-start-test" disabled>START</button>
+      <button id="btn-reset">🔄 Reset</button>
+    </div>
+  </div>
+  
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <div class="sidebar">
+    
+    <!-- ============================================================
+         TIMER CARD - Live Work/Rest Timer
+         Shows current timer state (READY/WORKING/REST)
+         ============================================================ -->
+    <div class="card timer-card">
+      <div class="card-title">⏱️ Timer</div>
+      <div class="timer-display">
+        <div id="rest-timer-label" class="timer-label">READY</div>
+        <div id="rest-timer" class="rest-timer">0:00</div>
+      </div>
+      <div class="timer-stats">
+        <div class="timer-stat">
+          <span class="timer-stat-label">Set</span>
+          <span id="timing-set-number" class="timer-stat-value">1</span>
         </div>
-
-        <!-- Metrics Section -->
-        <div class="flex flex-col gap-3">
-            <!-- Main Status Card -->
-            <div id="statusCard" class="metric-card border-l-4 border-l-slate-500">
-                <div class="metric-label">Zone Status</div>
-                <div id="zoneText" class="text-xl font-bold text-slate-300">WAITING</div>
-                <div id="recommendationText" class="text-xs text-slate-400 mt-1">Start 2-3 explosive reps</div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="metric-card">
-                    <div class="metric-label">Peak Velocity</div>
-                    <div class="metric-value"><span id="peakVel">0.00</span> <span class="text-xs font-normal text-slate-500">m/s</span></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Reps</div>
-                    <div class="metric-value" id="repCount">0</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Baseline (Avg 3)</div>
-                    <div class="metric-value"><span id="baselineVel">--</span> <span class="text-xs font-normal text-slate-500">m/s</span></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Drop Off</div>
-                    <div class="metric-value" id="dropOff">0%</div>
-                </div>
-            </div>
-
-            <!-- Current Realtime Velocity -->
-            <div class="metric-card bg-slate-800/50">
-                <div class="metric-label">Instant Velocity</div>
-                <div class="metric-value text-blue-400"><span id="currentVel">0.00</span> <span class="text-xs font-normal text-slate-500">m/s</span></div>
-            </div>
+        <div class="timer-stat">
+          <span class="timer-stat-label">Duration</span>
+          <span id="timing-set-duration" class="timer-stat-value">0:00</span>
         </div>
+        <div class="timer-stat">
+          <span class="timer-stat-label">Reps</span>
+          <span id="timing-set-reps" class="timer-stat-value">0</span>
+        </div>
+      </div>
     </div>
     
-    <!-- AI Coach Section -->
-    <div class="mb-6 bg-slate-800 rounded-lg p-6 border border-slate-700 relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <!-- ============================================================
+         SESSION STATS CARD - Aggregated Session Data
+         Tracks work:rest ratios and averages across sets
+         ============================================================ -->
+    <div class="card session-card">
+      <div class="card-title">📊 Session Stats</div>
+      <div class="session-stats">
+        <div class="session-stat">
+          <span class="session-label">Total Sets</span>
+          <span id="timing-total-sets" class="session-value">0</span>
         </div>
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-            <span>✨ AI Performance Coach</span>
-        </h3>
-        <p class="text-slate-400 text-sm mb-4">Analyze your velocity profile to determine if you truly hit failure and get personalized recovery tips.</p>
-        
-        <div id="ai-content-area" class="hidden mb-4">
-             <div class="p-4 bg-slate-900/80 rounded border border-slate-700 text-slate-200 leading-relaxed text-sm" id="ai-text-output"></div>
-             <div class="mt-2 flex justify-end">
-                <button id="speakBtn" class="flex items-center gap-2 text-xs font-semibold text-blue-400 hover:text-blue-300 transition uppercase tracking-wider">
-                    🔊 Listen to Coach
-                </button>
-             </div>
+        <div class="session-stat">
+          <span class="session-label">Avg Work</span>
+          <span id="timing-avg-work" class="session-value">---</span>
         </div>
-
-        <button id="analyzeBtn" class="gradient-btn text-white font-semibold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center gap-2">
-            <span>Analyze Last Session ✨</span>
-        </button>
+        <div class="session-stat">
+          <span class="session-label">Avg Rest</span>
+          <span id="timing-avg-rest" class="session-value">---</span>
+        </div>
+        <div class="session-stat">
+          <span class="session-label">Work:Rest</span>
+          <span id="timing-avg-ratio" class="session-value">---</span>
+        </div>
+      </div>
     </div>
-
-    <!-- History / Results -->
-    <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <h3 class="text-lg font-semibold mb-3 flex justify-between">
-            <span>Session History</span>
-            <button id="clearHistoryBtn" class="text-xs text-red-400 hover:text-red-300">Clear Data</button>
-        </h3>
-        <div class="overflow-x-auto results-scroll max-h-48">
-            <table class="w-full text-sm text-left text-slate-300">
-                <thead class="text-xs text-slate-400 uppercase bg-slate-900/50">
-                    <tr>
-                        <th class="px-3 py-2">Time</th>
-                        <th class="px-3 py-2">Reps</th>
-                        <th class="px-3 py-2">Baseline</th>
-                        <th class="px-3 py-2">Max Drop</th>
-                        <th class="px-3 py-2">Result</th>
-                    </tr>
-                </thead>
-                <tbody id="resultsBody">
-                    <!-- JS will populate -->
-                    <tr><td colspan="5" class="px-3 py-4 text-center text-slate-500">No tests recorded yet</td></tr>
-                </tbody>
-            </table>
+    
+    <!-- ============================================================
+         FATIGUE MONITOR CARD - Velocity Drop-off Analysis
+         Tracks anaerobic/lactate threshold indicators
+         ============================================================ -->
+    <div class="card fatigue-card">
+      <div class="card-title">⚡ Fatigue Monitor</div>
+      <div class="fatigue-zone-container">
+        <div id="fatigue-zone" class="fatigue-zone fresh">FRESH</div>
+      </div>
+      <div class="fatigue-stats">
+        <div class="fatigue-stat">
+          <span class="fatigue-label">Velocity Drop</span>
+          <span id="fatigue-drop" class="fatigue-value">0%</span>
         </div>
+        <div class="fatigue-stat">
+          <span class="fatigue-label">Baseline</span>
+          <span id="fatigue-baseline" class="fatigue-value">---</span>
+        </div>
+        <div class="fatigue-stat">
+          <span class="fatigue-label">Current</span>
+          <span id="fatigue-current" class="fatigue-value">---</span>
+        </div>
+        <div class="fatigue-stat">
+          <span class="fatigue-label">Prediction</span>
+          <span id="fatigue-prediction" class="fatigue-value">---</span>
+        </div>
+      </div>
     </div>
+    
+    <!-- ============================================================
+         CALIBRATION CARD - Height-based Pixel Calibration
+         ============================================================ -->
+    <div class="card calibration-section">
+      <div class="card-title">📏 Calibration</div>
+      <div class="height-input-group">
+        <input type="number" id="height-input" placeholder="Height (inches)" min="48" max="96" step="0.5">
+        <button id="btn-calibrate">GO</button>
+      </div>
+      <div id="calibration-status">
+        Enter your height to begin calibration
+      </div>
+    </div>
+    
+    <!-- ============================================================
+         DETECTED MOVEMENT CARD
+         ============================================================ -->
+    <div class="card">
+      <div class="card-title">Detected Movement</div>
+      <div id="detected-movement">READY</div>
+    </div>
+    
+    <!-- ============================================================
+         LIVE STATS CARD - Real-time Velocity
+         ============================================================ -->
+    <div class="card">
+      <div class="card-title">Live Stats</div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Total Reps</div>
+          <div class="stat-value" id="val-total-reps">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Velocity (m/s)</div>
+          <div class="stat-value velocity" id="val-velocity">0.00</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ============================================================
+         MOVEMENT HISTORY CARD - Per-Movement Breakdown
+         ============================================================ -->
+    <div class="card">
+      <div class="card-title">Movement History</div>
+      <div class="movement-list">
+        <div class="movement-row">
+          <span class="movement-name">Cleans</span>
+          <div class="movement-stats">
+            <span id="val-cleans">0</span> reps
+            <span id="val-clean-velocity">0.00</span> m/s
+          </div>
+        </div>
+        <div class="movement-row">
+          <span class="movement-name">Presses</span>
+          <div class="movement-stats">
+            <span id="val-presses">0</span> reps
+            <span id="val-press-velocity">0.00</span> m/s
+          </div>
+        </div>
+        <div class="movement-row">
+          <span class="movement-name">Snatches</span>
+          <div class="movement-stats">
+            <span id="val-snatches">0</span> reps
+            <span id="val-snatch-velocity">0.00</span> m/s
+          </div>
+        </div>
+        <div class="movement-row">
+          <span class="movement-name">Swings</span>
+          <div class="movement-stats">
+            <span id="val-swings">0</span> reps
+            <span id="val-swing-velocity">0.00</span> m/s
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div><!-- end sidebar -->
+</div><!-- end main-grid -->
+```
 
-  
+  </div><!-- end container -->
+
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
