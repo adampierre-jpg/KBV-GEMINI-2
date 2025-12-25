@@ -1,108 +1,59 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>VBT Kettlebell Tracker</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VBT Trainer 3D</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs" type="module"></script>
 </head>
 <body>
-
-  <!-- Hidden video element for camera capture -->
-
-<video id="video" autoplay playsinline muted></video>
-
-  <!-- Main canvas for pose visualization -->
-
-<canvas id="canvas"></canvas>
-
-  <!-- Top prompt bar -->
-
-  <div id="top-bar">
-    <span id="state-prompt">Enter your height to begin</span>
-  </div>
-
-  <!-- Height input modal -->
-
-  <div id="height-modal" class="modal">
-    <div class="modal-card">
-      <h2>VBT Kettlebell Tracker</h2>
-      <p>Enter your height for accurate velocity tracking</p>
-      <div class="input-row">
-        <input type="number" id="height-input" placeholder="70" min="48" max="96" step="0.5">
-        <span class="suffix">in</span>
-      </div>
-      <p class="hint">5'10" = 70 inches</p>
-      <button id="btn-height-submit" class="btn btn-primary">Continue</button>
+    <div id="camera-container">
+        <video id="video" playsinline muted autoplay></video>
+        <canvas id="output"></canvas>
     </div>
-  </div>
 
-  <!-- Left side stats -->
+    <div id="ui-layer">
+        
+        <div id="state-prompt" class="prompt-container">
+            <h2 id="prompt-text">Initializing...</h2>
+        </div>
 
-  <div id="stats-left">
-    <div class="stat-item">
-      <span class="label">Cleans</span>
-      <span id="val-cleans" class="value">0</span>
+        <div id="height-input-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Enter Height</h2>
+                <p>Required for velocity calibration</p>
+                <input type="number" id="height-input" placeholder="Height in inches" min="48" max="96">
+                <button id="btn-save-height">Save & Start</button>
+            </div>
+        </div>
+
+        <div id="overlay-center" class="hidden">
+            <div class="ring-container">
+                <svg class="progress-ring" width="120" height="120">
+                    <circle class="progress-ring__circle" stroke="white" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                </svg>
+                <div id="overlay-text" class="ring-text">HOLD<br>T-POSE</div>
+            </div>
+        </div>
+
+        <div id="stats-panel">
+            <div>Zone: <span id="fatigue-zone">FRESH</span></div>
+            <div>Reps: <span id="rep-count">0</span></div>
+            <div>Last Vel: <span id="last-velocity">0.00</span> m/s</div>
+            <div>Set: <span id="set-info">#1</span></div>
+        </div>
+
+        <div id="voice-indicator" class="hidden">
+            <div class="mic-icon">🎤</div>
+            <span id="voice-transcript">Listening...</span>
+        </div>
+        
+        <div id="controls">
+            <button id="btn-unlock-audio" class="hidden">Enable Audio</button>
+        </div>
     </div>
-    <div class="stat-item">
-      <span class="label">Presses</span>
-      <span id="val-presses" class="value">0</span>
-    </div>
-    <div class="stat-item">
-      <span class="label">Snatches</span>
-      <span id="val-snatches" class="value">0</span>
-    </div>
-    <div class="stat-item">
-      <span class="label">Swings</span>
-      <span id="val-swings" class="value">0</span>
-    </div>
-  </div>
 
-  <!-- Right side stats -->
-
-  <div id="stats-right">
-    <div class="stat-item big">
-      <span class="label">Movement</span>
-      <span id="detected-movement" class="value">READY</span>
-    </div>
-    <div class="stat-item">
-      <span class="label">Velocity</span>
-      <span class="value"><span id="val-velocity">0.00</span> m/s</span>
-    </div>
-    <div class="stat-item">
-      <span class="label">Total</span>
-      <span id="val-total-reps" class="value">0</span>
-    </div>
-    <div class="stat-item">
-      <span id="timer-label" class="label">Timer</span>
-      <span id="timer-value" class="value timer">0:00</span>
-    </div>
-  </div>
-
-  <!-- Bottom control bar -->
-
-  <div id="bottom-bar">
-    <button id="btn-camera" class="btn">📹 Camera</button>
-    <button id="btn-start" class="btn btn-primary" disabled>START</button>
-    <button id="btn-reset" class="btn btn-danger">Reset</button>
-  </div>
-
-  <!-- Calibration overlay -->
-
-  <div id="calibration-overlay" class="hidden">
-    <div class="cal-ring">
-      <svg viewBox="0 0 100 100">
-        <circle class="bg" cx="50" cy="50" r="45"/>
-        <circle id="cal-progress" class="progress" cx="50" cy="50" r="45"/>
-      </svg>
-      <span id="cal-text">0%</span>
-    </div>
-    <p id="cal-message">Hold T-pose or say "ready"</p>
-  </div>
-
-  <script type="module" src="app.js"></script>
-
+    <script type="module" src="src/app.js"></script>
 </body>
 </html>
