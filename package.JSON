@@ -1,0 +1,26 @@
+{
+  "name": "vbt-kettlebell-tracker",
+  "version": "2.0.0",
+  "description": "Velocity Based Training app for kettlebell exercises with 3D pose tracking, gesture control, and voice commands",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . -l 3000"
+  },
+  "keywords": [
+    "vbt",
+    "velocity-based-training",
+    "kettlebell",
+    "mediapipe",
+    "pose-detection",
+    "fitness",
+    "gesture-control",
+    "voice-commands"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}
