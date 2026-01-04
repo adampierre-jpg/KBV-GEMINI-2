@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	body {
+		overflow: hidden;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+}
+
+@layer utilities {
+	.text-copper {
+		color: #b87333;
+	}
+
+	.bg-copper {
+		background-color: #b87333;
+	}
+
+	.border-copper {
+		border-color: #b87333;
+	}
+
+	.ring-copper {
+		--tw-ring-color: #b87333;
+	}
+}
